@@ -52,7 +52,7 @@ If you now go to your Network Config, Security, ACL, you should see a Log toggle
 
 Here are a few things I have discovered by checking the forums and trial and error:
 
-- If you want to block external internet access into your network, blocking access to "IPGroup_Any" is not sufficient. You also will want to block access to the Gateway Management Page. From my understanding: Blocking the Gateway Management Page blocks access to your WAN IP address and traffic will not even be able to enter your ingress interface. Blocking IPGroup_Any will make the traffic enter your ingress interface, and only then will it be blocked it it hits an ACL.
+- If you want to block external internet access into your network, blocking access to "IPGroup_Any" is not sufficient. You also will want to block access to the Gateway Management Page. From my understanding: Blocking the Gateway Management Page blocks access to your WAN IP address and traffic will not even be able to enter your ingress interface. Blocking IPGroup_Any will make the traffic enter your ingress interface, and only then will it be blocked if it hits an ACL.
 -  Omada has an internal GEOIP Database as well which you can use to create Location Groups. I do not know where Omada gets its Geo-IP data. I tried to search the forums but no answers. What I do know is that it differs from the MaxMind GeoIP database. If you block, for example, France, you will still see France pop up in your Grafana dasbhoard because Omada and MaxMind classify it differently.
 -  If you go to your Global Settings, Security, you will also be able to block certain countries from access. If you block countries in this page, blocks will not be logged unless you have IDS/IPS enabled. This is not an option for me, as it completely tanks my performance on the ER-707M2. However, even if IDS/IPS is disabled, the countries you have blocked on the Threat Management Map will still be blocked. Only, there will be no logging whatsoever. As these attempts also do not make it to your ACLs.
 
@@ -155,6 +155,7 @@ You may notice this filter in all my queries:
     |~ `(?i)${search_filter:raw}` 
     |~ `(?i)${action_filter:raw}` 
     |~ `(?i)${acl_filter:raw}`
+    | geoip_country_name =~ "(?i).*${country_filter:raw}.*"
 ```
 
 This is coming from the variables defined on top, and allows me to filter the table, map, and pie charts all at once.
@@ -171,7 +172,7 @@ To make the IP addresses clickable and have them automatically applied to the to
 /d/dashboard_ID/dashboard_Name?var-search_filter=${__value.text}&var-action_filter=${action_filter}&var-acl_filter=${acl_filter}&var-country_filter=${country_filter}&${__url.timeRange}
 ```
 
-This will grab the IP you clicked, and enter in the search_filter textbox on top, while leaving the other filters active.
+This will grab the IP you clicked, and enter in the search_filter textbox on top, while leaving the other filters active. You can do the same for the other fields.
 
 # Whats next?
 
