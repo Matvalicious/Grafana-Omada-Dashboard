@@ -1,0 +1,36 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/lib/promtail/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+- job_name: rsyslogs
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: ryslogs
+      __path__: /rsyslog_logs/*log
+  pipeline_stages:
+    # Look for "SRC=" in the logs. This will be the source IP address.
+    - regex:
+        expression: 'SRC=(?P<public_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+    
+    # From the IP address we just extracted, cross-check this with the geolite2-city database. This DB will also contain Continent and Country information. As well as latitude/longitude.
+    - geoip:
+        db: "/usr/share/GeoIP/GeoLite2-City.mmdb"
+        db_type: city
+        source: public_ip
+        
+    # Tag the geoip metadata so it can easily be extracted in Grafana
+    - structured_metadata:
+        geoip_country_name:
+        geoip_country_code:
+        geoip_city_name:
+        geoip_location_latitude:
+        geoip_location_longitude:
