@@ -20,4 +20,8 @@ In my setup I will be using Docker Compose.
 # Compose file
 
 See the docker-compose.yaml file. This contains all the required containers mentioned above.
+Change your ports and environment variables to suit your needs.
 
+# Configuring Promtail
+
+First we need to tell Promtail to grab those rsyslog-collector logs. This is done in the promtail-config.yml file.
