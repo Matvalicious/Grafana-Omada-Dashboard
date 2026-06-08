@@ -1,0 +1,75 @@
+services:
+  geoipupdate:
+    container_name: geoipupdate
+    image: maxmindinc/geoipupdate:latest
+    restart: always
+    environment:
+      - "TZ=${TZ}"
+      - "GEOIPUPDATE_EDITION_IDS=GeoLite2-Country GeoLite2-City GeoLite2-ASN"
+      - "GEOIPUPDATE_ACCOUNT_ID=${GEOIPUPDATE_ACCOUNT_ID}" # You need to create an account on MaxMind to get your account ID and free License key.
+      - "GEOIPUPDATE_LICENSE_KEY=${GEOIPUPDATE_LICENSE_KEY}"
+      - "GEOIPUPDATE_FREQUENCY=24"
+    volumes:
+      - "/opt/geoip:/usr/share/GeoIP"
+
+  loki:
+    image: grafana/loki:3.4
+    container_name: loki
+    volumes:
+      - loki_etc:/etc/loki
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+    command: "-config.file=/etc/loki/loki-config.yml"
+    
+  promtail:
+    image: grafana/promtail:3.4
+    container_name: promtail
+    volumes:
+      - /var/lib/docker/volumes/loki_rsyslog_data/_data:/rsyslog_logs:ro # This is mapping the physical location of the ryslogs on the host to the promtail container.
+      - promtail_etc:/etc/promtail
+      - promtail_data:/var/lib/promtail
+      - /opt/geoip:/usr/share/GeoIP # This is needed if you want to use the GeoIP database to enrich your logs with GeoIP information.
+    ports:
+      - "1514:1514/tcp"
+      - "1514:1514/udp" # this is only needed if you are going to send syslogs
+    restart: unless-stopped
+    command: "-config.file=/etc/promtail/promtail-config.yml"
+      
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    user: "1000"
+    volumes:
+    - grafana_varlib:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+    environment:
+      # Whatever you need. Check the Grafana documentation for more information.
+    networks:
+      - loki_net
+      
+  rsyslog-collector:
+    image: rsyslog/rsyslog-collector:latest
+    container_name: rsyslog-collector
+    restart: unless-stopped
+    environment:
+      ENABLE_UDP: "on"
+      ENABLE_TCP: "on"
+      ENABLE_RELP: "off"
+      ENABLE_TLS: "off"
+    ports:
+      - "514:514/udp"    # Syslog UDP
+      - "514:514/tcp"    # Syslog TCP
+    volumes:
+      - rsyslog_data:/var/log   # Optional: collect logs on host
+      
+volumes:
+  loki_etc:
+  promtail_etc:
+  promtail_data:
+  loki_data: 
+  grafana_varlib:
+  rsyslog_data:
