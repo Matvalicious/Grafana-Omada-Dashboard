@@ -3,6 +3,10 @@ Grafana Dashboard for displaying TP-Link Omada ACL logs
 
 <img width="3066" height="1239" alt="Screenshot_20260607_210118" src="https://github.com/user-attachments/assets/90dc4ad6-5b14-4d6e-b655-09c4a104becc" />
 
+# Important note
+
+I have written this guide with the ER707-M2 gateway in mind, running firmware that is fully compatible with Controller version 6.2.X. It seems that the log feature is NOT available on the ER605 gateway. Maybe it will be with an upcoming update?
+
 # Why?
 
 I am quite fond of the Omada ecosystem, but one thing that has always bothered me is that there is no way of visualizing your Firewall/ACL logs. Recently I found out that, when you enable an external syslog server, this enables a Log option on your ACLs. Turns out that every single Allow or Block action is very neatly logged to your external syslog server. In order to actually visualize these logs, I am using a Loki/Grafana stack to turn the raw syslog into neatly organized tables and graphs.
